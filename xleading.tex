@@ -1,0 +1,57 @@
+\documentclass{beery}
+
+
+\begin{document}
+
+
+\section*
+  {%
+    \SetFontStep*{1}%
+    The \pkg{xleading} package%
+  }
+
+Set the leading
+
+Oliver Beery
+
+Version 0.0.0\quad{}5 February 2025
+
+
+\section{About}
+\label{sec:about}
+
+The \pkg{xleading} package can be thought of as an extension to the \pkg{leading} package even though it does not actually load the \pkg{leading} package.
+This package provides a single command \cs{leading} which sets the leading of a paragraph\---the baseline to baseline distance between lines\---to a specified length.
+
+\listheading{Requirements:}
+\begin{itemize}
+  \item \LaTeXe{} version 2023-11-01 or newer
+  \item \pkg{l3kernel} version 2023-10-10 or newer
+  \item \pkg{xleading} is incompatible with the \pkg{leading} package.
+\end{itemize}
+
+You may need to ensure that your \LaTeX{} installation is up\-/to\-/date before using this package.
+
+
+\section{Command}
+\label{sec:command}
+
+\begin{mydisplaycode}
+  \cs{leading} \sarg{} \marg{dimen expression}
+\end{mydisplaycode}
+
+\cs{leading} uses \cs{linespread}\marg{factor}\cs{selectfont} with a value of \meta{factor} set such that the new \cs{baselineskip} equals the value of \meta{dimen expression}, appending a default unit of \unit{pt}.
+Adding the optional star \sarg{} instead sets the new \cs{baselineskip} equal to the current \cs{baselineskip} + the result of of \meta{dimen expression}, appending a default unit of \unit{pt}.
+The new \cs{baselineskip} has no stretch and shrink components.
+Does nothing, except issue a warning, if used in math mode.
+
+
+\section{Programming}
+\label{sec:programming}
+
+\cs{leading} will be correctly removed inside \cs{text_purify:n}.
+
+This package does not provide any public \pkg{expl3} functions or variables.
+
+
+\end{document}

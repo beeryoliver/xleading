@@ -1,0 +1,94 @@
+% Package   : xleading -- Set the leading
+% Copyright : 2025 (c) Oliver Beery <beeryoliver@gmail.com>
+% CTAN      : <ADD CTAN LINK HERE>
+% Repository: https://github.com/beeryoliver/xleading
+% License   : The LaTeX Project Public License 1.3c
+
+% LaTeX2e version 2023-11-01 added \IfExplAtLeastTF.
+\NeedsTeXFormat{LaTeX2e}[2023-11-01]
+\ProvidesExplPackage
+  {xleading}
+  {2025-02-05}
+  {0.0.0}
+  {Set the leading}
+
+% l3kernel version 2023-10-10 added many 'e'-variants.
+\IfExplAtLeastTF { 2023-10-10 } { }
+  {
+    \msg_new:nnn { xleading } { expl3-out-of-date }
+      {
+        The~ xleading~ package~ could~ not~ load.~
+        This~ package~ requires~
+        L3~ programming~ layer~ version~ 2023-10-10~ or~ newer.
+      }
+    \msg_critical:nn { xleading } { expl3-out-of-date }
+  }
+
+\cs_new_protected:Npn \__xleading_hook_leading:
+  {
+    \msg_new:nnn { xleading } { package-leading-incompatible }
+      {
+        The~ xleading~ package~ is~ incompatible~ with~ the~
+        'leading'~ package.
+      }
+    \msg_critical:nn { xleading } { package-leading-incompatible }
+  }
+\hook_gput_code:nnn { package / leading / before } { xleading }
+  { \__xleading_hook_leading: }
+
+% This package does not require any other packages!
+
+% MESSAGE
+
+\msg_new:nnn { xleading } { math-mode-warning }
+  { '#1'~ does~ nothing~ if~ used~ in~ math~ mode~ \msg_line_context:. }
+
+% SOME VARIABLES
+
+\dim_new:N \l__xleading_tmp_dim
+
+% SOME FUNCTIONS
+
+% Sets a dimen variable from a dimen expression, appending a default unit of
+% 'pt', and removes extra trailing tokens, if any.
+\cs_new_protected:Npn \__xleading_dim_set_default_pt:Nn #1#2
+  {
+    \afterassignment \use_none_delimit_by_q_stop:w
+      #1 = \dimexpr #2 pt \relax
+    \q_stop
+  }
+% Argument processor
+\cs_new_protected:Npn \__xleading_arg_process_dim:n #1
+  {
+    \__xleading_dim_set_default_pt:Nn \l__xleading_tmp_dim {#1}
+    \tl_set:NV \ProcessedArgument \l__xleading_tmp_dim
+  }
+
+% DOCUMENT COMMAND
+
+\NewDocumentCommand \leading { s >{ \__xleading_arg_process_dim:n } m }
+  {
+    \mode_if_math:TF
+      {
+        \msg_warning:nne { xleading } { math-mode-warning }
+          { \token_to_str:N \leading }
+      }
+      {
+        \IfBooleanTF #1
+          { \__xleading_add_leading:n {#2} }
+          { \__xleading_set_leading:n {#2} }
+      }
+  }
+\cs_new_protected:Npn \__xleading_add_leading:n #1
+  { \__xleading_set_leading:n { (#1) + \baselineskip } }
+\cs_new_protected:Npn \__xleading_set_leading:n #1
+  {
+    \linespread
+      { \fp_eval:n { \dim_to_fp:n {#1} / \dim_to_fp:n { \f@baselineskip } } }
+    \selectfont
+  }
+
+% TEXT PURIFY
+
+\NewExpandableDocumentCommand \__xleading_use_none_sm:w { s m } { }
+\text_declare_purify_equivalent:Nn \leading { \__xleading_use_none_sm:w }
