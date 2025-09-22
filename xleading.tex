@@ -4,17 +4,13 @@
 \begin{document}
 
 
-\section*
-  {%
-    \setfontstep*{1}%
-    The \pkg{xleading} package%
-  }
+\section*{\stepfontsize{1}The \pkg{xleading} package}
 
 Set the leading
 
 Oliver Beery
 
-Version 0.0.1\quad{}4 March 2025
+Version 0.0.0\quad 22 September 2025
 
 
 \section{About}
@@ -26,32 +22,30 @@ This package provides a single command \cs{leading} which sets the leading of a 
 \listheading{Requirements:}
 \begin{itemize}
   \item \LaTeXe{} version 2023-11-01 or newer
-  \item \pkg{l3kernel} version 2023-10-10 or newer
+  \item \pkg{l3kernel} version 2023-11-01 or newer
   \item \pkg{xleading} is incompatible with the \pkg{leading} package.
 \end{itemize}
 
-You may need to ensure that your \LaTeX{} installation is up-to-date before using this package.
+\pkg{xleading} does not load or require any other packages.
 
 
 \section{Command}
 \label{sec:command}
 
-\begin{displaycode}
-  \cs{leading} \sarg{} \marg{dimen expression}
-\end{displaycode}
-
-\cs{leading} uses \cs{linespread}\marg{factor}\cs{selectfont} with a value of \meta{factor} set such that the new \cs{baselineskip} equals the value of \meta{dimen expression}.
-Adding the optional star \sarg{} instead sets the new \cs{baselineskip} equal to the current \cs{baselineskip} + the result of of \meta{dimen expression}.
-The new \cs{baselineskip} has no stretch and shrink components.
-Does nothing, except issue a warning, if used in math mode.
+\begin{function}{\leading}
+  \begin{syntax}
+    \cs{leading} \marg{dim expr}
+  \end{syntax}
+  Uses \cs{linespread}\marg{factor}\cs{selectfont} with a value of \meta{factor} set such that the new \cs{baselineskip} equals the result of evaluating the \meta{dim expr}.
+  The new \cs{baselineskip} has no stretch and shrink components.
+  Cannot be used in math mode.
+\end{function}
 
 
 \section{Programming}
 \label{sec:programming}
 
 \cs{leading} will be correctly removed inside \cs{text_purify:n}.
-
-This package does not provide any public \pkg{expl3} functions or variables.
 
 
 \end{document}

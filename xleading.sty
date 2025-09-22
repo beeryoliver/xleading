@@ -6,54 +6,35 @@
 
 % LaTeX2e version 2023-11-01 added \IfExplAtLeastTF.
 \NeedsTeXFormat{LaTeX2e}[2023-11-01]
-\ProvidesExplPackage{xleading}{2025-03-04}{0.0.1}{Set the leading}
+\ProvidesExplPackage{xleading}{2025-09-22}{0.0.0}{Set the leading}
 
-% l3kernel version 2023-10-10 added many 'e'-variants.
-\IfExplAtLeastTF { 2023-10-10 } { }
+\msg_new:nnn { xleading } { l3kernel }
   {
-    \msg_new:nnn { xleading } { l3kernel-out-of-date }
-      {
-        The~ xleading~ package~ could~ not~ load. \\
-        This~ package~ requires~
-        L3~ programming~ layer~ version~ 2023-10-10~ or~ newer.
-      }
-    \msg_critical:nn { xleading } { l3kernel-out-of-date }
+    The~ xleading~ package~ could~ not~ load. \\
+    This~ package~ requires~
+    L3~ programming~ layer~ version~ 2023-11-01~ or~ newer.
   }
+\msg_new:nnn { xleading } { leading }
+  { The~ xleading~ package~ is~ incompatible~ with~ the~ leading~ package. }
 
-\cs_new_protected:Npn \__xleading_hook_leading:
-  {
-    \msg_new:nnn { xleading } { package-leading }
-      {
-        The~ xleading~ package~ is~ incompatible~ with~ the~
-        'leading'~ package.
-      }
-    \msg_error:nn { xleading } { package-leading }
-  }
+\IfExplAtLeastTF { 2023-11-01 } { }
+  { \msg_critical:nn { xleading } { l3kernel } }
 \hook_gput_code:nnn { package / leading / before } { xleading }
-  { \__xleading_hook_leading: }
+  { \msg_error:nn { xleading } { leading } }
 
 % MESSAGE
 
-\msg_new:nnn { xleading } { math-mode-warning }
-  { '#1'~ does~ nothing~ if~ used~ in~ math~ mode~ \msg_line_context:. }
+\msg_new:nnn { xleading } { math-mode-invalid }
+  { '\iow_char:N \\#1'~ invalid~ in~ math~ mode~ \msg_line_context:. }
 
 % DOCUMENT COMMAND
 
-\NewDocumentCommand \leading { s m }
+\NewDocumentCommand \leading { m }
   {
     \mode_if_math:TF
-      {
-        \msg_warning:nne { xleading } { math-mode-warning }
-          { \token_to_str:N \leading }
-      }
-      {
-        \IfBooleanTF #1
-          { \__xleading_add_leading:n {#2} }
-          { \__xleading_set_leading:n {#2} }
-      }
+      { \msg_error:nnn { xleading } { math-mode-invalid } { leading } }
+      { \__xleading_set_leading:n {#1} }
   }
-\cs_new_protected:Npn \__xleading_add_leading:n #1
-  { \__xleading_set_leading:n { (#1) + \baselineskip } }
 \cs_new_protected:Npn \__xleading_set_leading:n #1
   {
     \linespread
@@ -63,5 +44,4 @@
 
 % TEXT PURIFY
 
-\NewExpandableDocumentCommand \__xleading_use_none_sm:w { s m } { }
-\text_declare_purify_equivalent:Nn \leading { \__xleading_use_none_sm:w }
+\text_declare_purify_equivalent:Nn \leading { \use_none:n }
