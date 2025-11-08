@@ -1,12 +1,13 @@
-% Package   : xleading -- Set the leading
-% Copyright : 2025 (c) Oliver Beery <beeryoliver@gmail.com>
-% CTAN      : <ADD CTAN LINK HERE>
-% Repository: https://github.com/beeryoliver/xleading
-% License   : The LaTeX Project Public License 1.3c
+%%% Package   : xleading -- Set the leading
+%%% Copyright : 2025 (c) Oliver Beery <beeryoliver@gmail.com>
+%%% CTAN      : <ADD CTAN LINK HERE>
+%%% Repository: https://github.com/beeryoliver/xleading
+%%% License   : The LaTeX Project Public License 1.3c
 
-% LaTeX2e version 2023-11-01 added \IfExplAtLeastTF.
+%%> \section{Loading the package}
+
 \NeedsTeXFormat{LaTeX2e}[2023-11-01]
-\ProvidesExplPackage{xleading}{2025-09-22}{0.0.0}{Set the leading}
+\ProvidesExplPackage{xleading}{2025-11-07}{0.0.0}{Set the leading}
 
 \msg_new:nnn { xleading } { l3kernel }
   {
@@ -22,17 +23,12 @@
 \hook_gput_code:nnn { package / leading / before } { xleading }
   { \msg_error:nn { xleading } { leading } }
 
-% MESSAGE
-
-\msg_new:nnn { xleading } { math-mode-invalid }
-  { '\iow_char:N \\#1'~ invalid~ in~ math~ mode~ \msg_line_context:. }
-
-% DOCUMENT COMMAND
+%%> \section{Document command}
 
 \NewDocumentCommand \leading { m }
   {
     \mode_if_math:TF
-      { \msg_error:nnn { xleading } { math-mode-invalid } { leading } }
+      { \msg_error:nn { xleading } { math-mode-invalid } }
       { \__xleading_set_leading:n {#1} }
   }
 \cs_new_protected:Npn \__xleading_set_leading:n #1
@@ -42,6 +38,11 @@
     \selectfont
   }
 
-% TEXT PURIFY
+%%> \section{Purifying text}
 
 \text_declare_purify_equivalent:Nn \leading { \use_none:n }
+
+%%> \section{Message}
+
+\msg_new:nnn { xleading } { math-mode-invalid }
+  { '\iow_char:N \\ leading'~ invalid~ in~ math~ mode~ \msg_line_context:. }

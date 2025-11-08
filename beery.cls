@@ -3,7 +3,7 @@
 % LOADING THE CLASS
 
 \NeedsTeXFormat{LaTeX2e}[2023-11-01]
-\ProvidesExplClass{beery}{2025-09-22}{0.0.0}{}
+\ProvidesExplClass{beery}{2025-11-07}{0.0.0}{}
 
 \prop_gput:Nnn \g_msg_module_type_prop { beery } { Class }
 
@@ -14,13 +14,9 @@
     L3~ programming~ layer~ version~ 2023-11-01~ or~ newer.
   }
 \msg_new:nnn { beery } { luatex }
-  {
-    The~ beery~ class~ could~ not~ load. \\
-    This~ class~ requires~ LuaTeX.
-  }
+  { The~ beery~ class~ could~ not~ load. \\ This~ class~ requires~ LuaTeX. }
 
-\IfExplAtLeastTF { 2023-11-01 } { }
-  { \msg_critical:nn { beery } { l3kernel } }
+\IfExplAtLeastTF { 2023-11-01 } { } { \msg_critical:nn { beery } { l3kernel } }
 \sys_if_engine_luatex:F { \msg_critical:nn { beery } { luatex } }
 
 \LoadClass { article }
@@ -28,10 +24,10 @@
 % MESSAGES
 
 \msg_new:nnn { beery } { math-mode-invalid }
-  { '\iow_char:N \\#1'~ invalid~ in~ math~ mode~ \msg_line_context:. }
+  { '\iow_char:N \\ #1'~ invalid~ in~ math~ mode~ \msg_line_context:. }
 
 \RequirePackage { fontscale }
-\fontscalesetup { musical }
+\fontscalesetup { musical , musical / base = 10bp }
 \RequirePackage { siunitx }
 \sisetup { list-final-separator = { ,~ and~ } , mode = math }
 \RequirePackage { mathtools }
@@ -52,6 +48,7 @@
   { The~ quick~ brown~ fox~ jumps~ over~ the~ lazy~ dog. }
 
 \bool_new:N \l__beery_syntax_bool
+\bool_new:N \l__beery_arg_bool
 
 \tl_new:N \l__beery_print_key_tl
 \tl_new:N \l__beery_print_cs_tl
@@ -62,7 +59,6 @@
 
 % CUSTOM MACROS
 
-\cs_generate_variant:Nn \tl_replace_all:Nnn { NeV }
 \prg_generate_conditional_variant:Nnn \str_if_eq:nn { e } { TF }
 
 \cs_new_protected:Npn \__beery_print_langle: { \ensuremath { \langle } }
@@ -96,11 +92,15 @@
   }
 \cs_new_protected:Npn \__beery_print_key:n #1
   {
-    \tl_set:Nn \l__beery_print_key_tl {#1}
-    \tl_trim_spaces:N \l__beery_print_key_tl
-    \tl_replace_all:Nnn \l__beery_print_key_tl { / }
-      { \__beery_print_key_value_slash: }
-    \texttt { \l__beery_print_key_tl } \@
+    \group_begin:
+      \bool_set_true:N \l__beery_arg_bool
+      \tl_set:Nn \l__beery_print_key_tl {#1}
+      \tl_trim_spaces:N \l__beery_print_key_tl
+      \tl_replace_all:Nnn \l__beery_print_key_tl { / }
+        { \__beery_print_key_value_slash: }
+      \ttfamily
+      \l__beery_print_key_tl \@
+    \group_end:
   }
 \cs_new_protected:Npn \__beery_print_key_value_slash: { \slash }
 \cs_new_protected:Npn \__beery_print_key_value_equal:
@@ -110,7 +110,13 @@
       { \ensuremath { \, = \, } \allowbreak }
   }
 \cs_new_protected:Npn \__beery_print_value:n #1
-  { \texttt { \tl_trim_spaces:n {#1} } \@ }
+  {
+    \group_begin:
+      \bool_set_true:N \l__beery_arg_bool
+      \ttfamily
+      \tl_trim_spaces:n {#1} \@
+    \group_end:
+  }
 
 \NewDocumentCommand \choices { m }
   {
@@ -131,11 +137,38 @@
   }
 \cs_new_protected:Npn \__beery_print_cs:n #1
   {
-    \tl_set:Nn \l__beery_print_cs_tl {#1}
-    \tl_replace_all:NeV \l__beery_print_cs_tl
-      { \char_generate:nn { `_ } { 8 } } \c_underscore_str
-    \texttt { \c_backslash_str \l__beery_print_cs_tl } \@
+    \group_begin:
+      \bool_set_true:N \l__beery_arg_bool
+      \tl_set:Nn \l__beery_print_cs_tl {#1}
+      \__beery_print_cs_replace_underscore:
+      \__beery_print_cs_replace_atat:n { fontscale }
+      \__beery_print_cs_replace_active_vert:
+      \ttfamily
+      \c_backslash_str \l__beery_print_cs_tl \@
+    \group_end:
   }
+\cs_new_protected:Npe \__beery_print_cs_replace_underscore:
+  {
+    \tl_replace_all:Nnn \exp_not:N \l__beery_print_cs_tl
+      { \char_generate:nn { `_ } { 8 } } { _ }
+    \tl_replace_all:Nnn \exp_not:N \l__beery_print_cs_tl { \c_underscore_str }
+      { _ }
+  }
+\cs_new_protected:Npn \__beery_print_cs_replace_atat:n #1
+  {
+    \tl_replace_all:Nen \l__beery_print_cs_tl { \tl_to_str:n { @ @ } } { @ @ }
+    \tl_replace_all:Nnn \l__beery_print_cs_tl { __@ @ } { __#1 }
+    \tl_replace_all:Nnn \l__beery_print_cs_tl {  _@ @ } { __#1 }
+    \tl_replace_all:Nnn \l__beery_print_cs_tl {   @ @ } { __#1 }
+  }
+\group_begin:
+  \char_set_catcode_active:N |
+  \cs_new_protected:Npe \__beery_print_cs_replace_active_vert:
+    {
+      \tl_replace_all:Nnn \exp_not:N \l__beery_print_cs_tl { \exp_not:N | }
+        { \token_to_str:N | }
+    }
+\group_end:
 
 \NewDocumentCommand \meta { >{ \TrimSpaces } m }
   {
@@ -145,33 +178,47 @@
   }
 \cs_new_protected:Npn \__beery_print_meta:n #1
   {
-    \tl_set:Nn \l__beery_print_meta_tl {#1}
-    \tl_map_inline:nn { {8} {11} {12} {13} }
+    \group_begin:
+      \bool_if:NTF \l__beery_syntax_bool
+        { \bool_if:NF \l__beery_arg_bool { ~ } }
+        { \bool_if:NF \l__beery_arg_bool { \allowbreak } }
+      \tl_set:Nn \l__beery_print_meta_tl {#1}
+      \__beery_print_meta_replace_underscore:
+      \__beery_print_meta_replace_expr:
+      \ttfamily \slshape
+      \__beery_print_langle:
+      \l__beery_print_meta_tl
+      \__beery_print_rangle:
+    \group_end:
+  }
+\cs_new_protected:Npn \__beery_print_meta_replace_underscore:
+  {
+    \tl_map_inline:nn { {8} {11} {12} }
       {
         \tl_replace_all:Nen \l__beery_print_meta_tl
           { \char_generate:nn { `_ } {##1} }
           { \__beery_print_meta_subscript:n }
       }
-    \tl_map_inline:nn
-      {
-        { { fp~ expr } { floating~ point~ expression } }
-        { { int~ expr } { integer~ expression } }
-        { { dim~ expr } { dimen~ expression } }
-        { { skip~ expr } { skip~ expression } }
-        { { muskip~ expr } { muskip~ expression } }
-      }
-      { \__beery_print_meta_replace_expr:nn ##1 }
-    \__beery_print_langle:
-    \group_begin:
-      \ttfamily \slshape
-      \l__beery_print_meta_tl
-    \group_end:
-    \__beery_print_rangle:
   }
 \cs_new_protected:Npn \__beery_print_meta_subscript:n #1
   { \ensuremath { \sb {#1} } }
+\cs_new_protected:Npn \__beery_print_meta_replace_expr:
+  {
+    \tl_if_in:NnT \l__beery_print_meta_tl { expr }
+      {
+        \__beery_print_meta_replace_expr:nn
+          { fp~ expr } { floating~ point~ expression }
+          { int~ expr } { integer~ expression }
+          { dim~ expr } { dimen~ expression }
+          { skip~ expr } { skip~ expression }
+          { muskip~ expr } { muskip~ expression }
+          { \q_recursion_tail } { }
+        \q_recursion_stop
+      }
+  }
 \cs_new_protected:Npn \__beery_print_meta_replace_expr:nn #1#2
   {
+    \quark_if_recursion_tail_stop:n {#1}
     \tl_if_in:NnT \l__beery_print_meta_tl {#1}
       {
         \cs_set_protected:Npn \__beery_print_meta_replace_expr:w
@@ -179,13 +226,14 @@
           {
             \tl_if_empty:nT {##1}
               {
-                \tl_map_break:n
-                  { \tl_replace_once:Nnn \l__beery_print_meta_tl {#1} {#2} }
+                \use_i_delimit_by_q_recursion_stop:nw
+                  { \tl_set:Nn \l__beery_print_meta_tl { #2 ##2 } }
               }
           }
         \exp_after:wN \__beery_print_meta_replace_expr:w
           \l__beery_print_meta_tl \q_stop
       }
+    \__beery_print_meta_replace_expr:nn
   }
 
 \NewDocumentCommand \marg { s >{ \TrimSpaces } m }
@@ -200,17 +248,19 @@
   }
 \cs_new_protected:Npn \__beery_print_m_arg:n #1
   {
-    \allowbreak
     \group_begin:
+      \bool_set_true:N \l__beery_arg_bool
       \ttfamily
+      \bool_if:NTF \l__beery_syntax_bool { ~ } { \allowbreak }
       \c_left_brace_str #1 \c_right_brace_str
     \group_end:
   }
 \cs_new_protected:Npn \__beery_print_m_arg_meta:n #1
   {
-    \allowbreak
     \group_begin:
+      \bool_set_true:N \l__beery_arg_bool
       \ttfamily
+      \bool_if:NTF \l__beery_syntax_bool { ~ } { \allowbreak }
       \c_left_brace_str \__beery_print_meta:n {#1} \c_right_brace_str
     \group_end:
   }
@@ -227,17 +277,19 @@
   }
 \cs_new_protected:Npn \__beery_print_o_arg:n #1
   {
-    \allowbreak
     \group_begin:
+      \bool_set_true:N \l__beery_arg_bool
       \ttfamily
+      \bool_if:NTF \l__beery_syntax_bool { ~ } { \allowbreak }
       [ #1 ]
     \group_end:
   }
 \cs_new_protected:Npn \__beery_print_o_arg_meta:n #1
   {
-    \allowbreak
     \group_begin:
+      \bool_set_true:N \l__beery_arg_bool
       \ttfamily
+      \bool_if:NTF \l__beery_syntax_bool { ~ } { \allowbreak }
       [ \__beery_print_meta:n {#1} ]
     \group_end:
   }
@@ -249,7 +301,10 @@
       { \__beery_print_s_arg: }
   }
 \cs_new_protected:Npn \__beery_print_s_arg:
-  { \__beery_print_langle: \texttt {*} \__beery_print_rangle: }
+  {
+    \bool_if:NT \l__beery_syntax_bool { ~ }
+    \__beery_print_langle: \texttt {*} \__beery_print_rangle:
+  }
 
 \NewDocumentCommand \cls { >{ \TrimSpaces } m }
   {
@@ -257,7 +312,7 @@
       { \msg_error:nnn { beery } { math-mode-invalid } { cls } }
       { \__beery_print_cls:n {#1} }
   }
-\cs_new_protected:Npn \__beery_print_cls:n #1 { \textsf {#1} \@ }
+\cs_new_protected:Npn \__beery_print_cls:n #1 { \textsf { #1 \@ } }
 
 \NewDocumentCommand \env { >{ \TrimSpaces } m }
   {
@@ -265,7 +320,7 @@
       { \msg_error:nnn { beery } { math-mode-invalid } { env } }
       { \__beery_print_env:n {#1} }
   }
-\cs_new_protected:Npn \__beery_print_env:n #1 { \texttt {#1} \@ }
+\cs_new_protected:Npn \__beery_print_env:n #1 { \texttt { #1 \@ } }
 
 \NewDocumentCommand \pkg { >{ \TrimSpaces } m }
   {
@@ -273,7 +328,7 @@
       { \msg_error:nnn { beery } { math-mode-invalid } { pkg } }
       { \__beery_print_pkg:n {#1} }
   }
-\cs_new_protected:Npn \__beery_print_pkg:n #1 { \textsf {#1} \@ }
+\cs_new_protected:Npn \__beery_print_pkg:n #1 { \textsf { #1 \@ } }
 
 \NewDocumentCommand \latin { >{ \TrimSpaces } m }
   {
@@ -336,7 +391,7 @@
     \ttfamily
     \obeylines
   }
-\NewDocumentEnvironment { function } { m }
+\NewDocumentEnvironment { function } { >{ \TrimSpaces } m }
   {
     \par
     \begin { minipage } [ b ] { \textwidth }
@@ -427,7 +482,7 @@
 \RequirePackage [ raggedrightboxes ] { ragged2e }
 \setlength \RaggedRightRightskip { 0pt plus \dim_use:N \c_beery_alphabet_dim }
 \setlength \RaggedRightParindent { 0pt }
-\setlength \JustifyingParindent { \RaggedRightParindent }
+\setlength \JustifyingParindent { 1.5em }
 \RaggedRight
 % \justifying
 \RequirePackage { microtype }
@@ -618,8 +673,7 @@
 \RequirePackage { xurl }
 \RequirePackage { hyperref }
 \hypersetup { bookmarksnumbered , hidelinks , linktoc = page }
-\cs_new:Npn \__beery_pdfstring_print_cs:n #1
-  { \textbackslash \tl_to_str:e { \tl_trim_spaces:n {#1} } }
+
 \cs_new:Npn \__beery_pdfstring_print_key_value:n #1
   {
     \exp_args:Ne \__beery_pdfstring_print_key_value_aux:n
@@ -631,12 +685,17 @@
       { \tl_to_str:e { \tl_range:nnn {#1} { 2 } { -1 } } }
       { \tl_to_str:n {#1} }
   }
-\cs_new:Npn \__beery_pdfstring_meta:n #1
+\cs_new:Npn \__beery_pdfstring_print_cs:n #1
+  { \textbackslash \tl_to_str:e { \tl_trim_spaces:n {#1} } }
+\cs_new:Npn \__beery_pdfstring_print_meta:n #1
   { < \tl_to_str:e { \tl_trim_spaces:n {#1} } > }
+\cs_new:Npn \__beery_pdfstring_print_pkg:n #1
+  { \tl_to_str:e { \tl_trim_spaces:n {#1} } }
 \pdfstringdefDisableCommands
   {
     \cs_set_eq:NN \key  \__beery_pdfstring_print_key_value:n
     \cs_set_eq:NN \cs   \__beery_pdfstring_print_cs:n
     \cs_set_eq:NN \meta \__beery_pdfstring_print_meta:n
     \cs_set_eq:NN \__beery_print_meta:n \__beery_pdfstring_print_meta:n
+    \cs_set_eq:NN \pkg  \__beery_pdfstring_print_pkg:n
   }
