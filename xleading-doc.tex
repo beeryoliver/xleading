@@ -53,7 +53,8 @@ The syntax \meta{dim expr} has the same meaning as the argument to
 
 \section{Programming}
 
-\cs{leading} will be correctly removed inside \cs{text_purify:n}.
+This package uses \cs{text_declare_purify_equivalent:Nn} to make
+\cs{text_purify:n} correctly remove \cs{leading}.
 
 
 \end{document}
