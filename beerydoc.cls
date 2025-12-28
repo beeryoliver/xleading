@@ -1,28 +1,26 @@
-% LOADING THE CLASS
+% Loading the class
 
-\NeedsTeXFormat{LaTeX2e}[2023-11-01]
-\ProvidesExplClass{beerydoc}{2025-12-18}{0.0.0}{}
+\NeedsTeXFormat{LaTeX2e}[2025-11-01]
+\ProvidesExplClass{beerydoc}{2025-12-27}{0.0.0}{}
 \prop_gput:Nnn \g_msg_module_type_prop { beerydoc } { Class }
 
 \msg_new:nnn { beerydoc } { l3kernel }
   {
     The~ beerydoc~ class~ could~ not~ load. \\
     This~ class~ requires~
-    L3~ programming~ layer~ version~ 2023-11-01~ or~ newer.
+    L3~ programming~ layer~ version~ 2024-12-09~ or~ newer.
   }
 \msg_new:nnn { beerydoc } { luatex }
   { The~ beerydoc~ class~ could~ not~ load. \\ This~ class~ requires~ LuaTeX. }
 
-\IfExplAtLeastTF { 2023-11-01 } { }
-  { \msg_critical:nn { beerydoc } { l3kernel } }
+\IfExplAtLeastF { 2024-12-09 } { \msg_critical:nn { beerydoc } { l3kernel } }
 \sys_if_engine_luatex:F { \msg_critical:nn { beerydoc } { luatex } }
 
 \LoadClass { article }
 
 \keys_define:nn { beerydoc }
   {
-      showframe .code:n =
-        { \PassOptionsToPackage { showframe } { geometry } }
+      showframe .code:n = { \PassOptionsToPackage { showframe } { geometry } }
     , showframe .value_forbidden:n = true
     , showframe .usage:n = load
   }
@@ -37,13 +35,13 @@
 \cs_set_eq:NN \muskipeval \muskip_eval:n
 \RequirePackage { xcolor }
 
-% FONT SELECTION
+% Font selection
 
 \RequirePackage { lmodern }
 \RequirePackage { scaletextbullet }
 \settextbulletfactor { 0.4 }
 
-% SOME VARIABLES
+% Some variables
 
 \fp_const:Nn \c_beerydoc_golden_ratio_fp { 1.6180 3398 8749 8948 }
 \tl_const:Nn \c_beerydoc_alphabet_tl { abcdefghijklmnopqrstuvwxyz }
@@ -80,18 +78,23 @@
 \group_begin:
   \char_set_catcode_active:N |
   \tl_const:Nn \c__beerydoc_active_vert_tl { | }
+  \char_set_active_eq:NN _ \scan_stop:
+  \tl_const:Ne \c__beerydoc_active_underscore_tl
+    { \char_generate:nn { `_ } { 13 } }
 \group_end:
 
 \tl_new:N \l__beerydoc_key_tl
 \tl_new:N \l__beerydoc_value_tl
 \tl_new:N \l__beerydoc_cs_tl
 \tl_new:N \l__beerydoc_meta_tl
+\tl_new:N \l__beerydoc_hook_tl
 
 \bool_new:N \l__beerydoc_syntax_bool
 
-% CUSTOM MACROS
+% Custom macros
 
 \cs_generate_variant:Nn \tl_replace_once:Nnn { No }
+\cs_generate_variant:Nn \tl_replace_all:Nnn { No }
 \prg_generate_conditional_variant:Nnn \str_if_eq:nn { ne , e }
   { p , T , F , TF }
 
@@ -128,13 +131,12 @@
   {
     \group_begin:
       \tl_set:Nn \l__beerydoc_key_tl {#1}
-      \tl_replace_all:Nnn \l__beerydoc_key_tl { / }
-        { \__beerydoc_key_value_slash: }
+      \tl_replace_all:Nnn \l__beerydoc_key_tl { / } { \__beerydoc_key_slash: }
       \ttfamily
       \l__beerydoc_key_tl \@
     \group_end:
   }
-\cs_new_protected:Npn \__beerydoc_key_value_slash: { / \allowbreak }
+\cs_new_protected:Npn \__beerydoc_key_slash: { / \allowbreak }
 \cs_new_protected:Npn \__beerydoc_key_value_equal:
   {
     \bool_if:NTF \l__beerydoc_syntax_bool
@@ -145,20 +147,14 @@
     \group_begin:
       \tl_set:Nn \l__beerydoc_value_tl {#1}
       \tl_replace_all:Nnn \l__beerydoc_value_tl { ~ } { \textvisiblespace }
+      \cs_set_eq:NN \choices \__beerydoc_value_choices:n
       \ttfamily
       \l__beerydoc_value_tl \@
     \group_end:
   }
-
-\NewDocumentCommand \choices { m }
-  {
-    \mode_if_math:TF
-      { \msg_error:nnn { beerydoc } { math-mode-invalid } { choices } }
-      { \__beerydoc_key_value_choices:n {#1} }
-  }
-\cs_new_protected:Npn \__beerydoc_key_value_choices:n #1
-  { \clist_use:nn {#1} { \__beerydoc_key_value_choices_separator: } }
-\cs_new_protected:Npn \__beerydoc_key_value_choices_separator:
+\cs_new_protected:Npn \__beerydoc_value_choices:n #1
+  { \clist_use:nn {#1} { \__beerydoc_value_choices_separator: } }
+\cs_new_protected:Npn \__beerydoc_value_choices_separator:
   { \ensuremath { \, \vert \, } }
 
 \NewDocumentCommand \cs { m }
@@ -171,26 +167,40 @@
   {
     \group_begin:
       \tl_set:Nn \l__beerydoc_cs_tl {#1}
-      \__beerydoc_cs_replace_underscore:
       \tl_replace_all:Nnn \l__beerydoc_cs_tl { ~ } { \textvisiblespace }
       \tl_replace_all:NVn \l__beerydoc_cs_tl \c__beerydoc_active_vert_tl { | }
+      \__beerydoc_cs_replace_underscore:
+      \__beerydoc_cs_hyphenation:
       \ttfamily
       \c_backslash_str \l__beerydoc_cs_tl \@
     \group_end:
   }
 \cs_new_protected:Npn \__beerydoc_cs_replace_underscore:
   {
-    \tl_replace_all:NVn \l__beerydoc_cs_tl \c__beerydoc_math_subscript_tl { _ }
-    \tl_replace_all:NVn \l__beerydoc_cs_tl \c_underscore_str { _ }
+    \tl_map_inline:nn
+      {
+        \c__beerydoc_math_subscript_tl
+        \c_underscore_str
+        \c__beerydoc_active_underscore_tl
+      }
+      { \tl_replace_all:NVn \l__beerydoc_cs_tl ##1 { _ } }
   }
-
-\NewDocumentCommand \meta { m }
+\cs_new_protected:Npn \__beerydoc_cs_hyphenation:
   {
-    \mode_if_math:TF
-      { \msg_error:nnn { beerydoc } { math-mode-invalid } { meta } }
-      { \__beerydoc_meta:n {#1} }
+    \tl_if_in:NnT \l__beerydoc_cs_tl { _ }
+      {
+        \tl_regex_replace_all:NNn \l__beerydoc_cs_tl
+          \c__beerydoc_cs_hyphenation_regex { \1 \c{-} \2 }
+      }
   }
+\regex_const:Nn \c__beerydoc_cs_hyphenation_regex { ([^\\\_]\_+) ([^\_]) }
+\cs_new_protected:Npn \__beerydoc_cs:N #1
+  { \exp_args:Ne \__beerydoc_cs:n { \cs_to_str:N #1 } }
+
+\NewDocumentCommand \meta { m } { \__beerydoc_meta:n {#1} }
 \cs_new_protected:Npn \__beerydoc_meta:n #1
+  { \mode_if_math:TF { \text } { \use:n } { \__beerydoc_meta_aux:n {#1} } }
+\cs_new_protected:Npn \__beerydoc_meta_aux:n #1
   {
     \group_begin:
       \tl_set:Nn \l__beerydoc_meta_tl {#1}
@@ -204,12 +214,17 @@
   }
 \cs_new_protected:Npn \__beerydoc_meta_replace_underscore:
   {
-    \tl_replace_all:NVn \l__beerydoc_meta_tl \c__beerydoc_math_subscript_tl
-      { \__beerydoc_meta_subscript:n }
-    \tl_replace_all:Nnn \l__beerydoc_meta_tl { _ }
-      { \__beerydoc_meta_subscript:n }
-    \tl_replace_all:NVn \l__beerydoc_meta_tl \c_underscore_str
-      { \__beerydoc_meta_subscript:n }
+    \tl_map_inline:nn
+      {
+        \c__beerydoc_math_subscript_tl
+        _
+        \c_underscore_str
+        \c__beerydoc_active_underscore_tl
+      }
+      {
+        \tl_replace_all:Non \l__beerydoc_meta_tl {##1}
+          { \__beerydoc_meta_subscript:n }
+      }
   }
 \cs_new_protected:Npn \__beerydoc_meta_subscript:n #1
   { \ensuremath { \sb {#1} } }
@@ -270,7 +285,7 @@
       }
   }
 \__beerydoc_tmp:Nn \__beerydoc_m_arg:n {#1}
-\__beerydoc_tmp:Nn \__beerydoc_m_arg_meta:n { \__beerydoc_meta:n {#1} }
+\__beerydoc_tmp:Nn \__beerydoc_m_arg_meta:n { \meta {#1} }
 
 \NewDocumentCommand \oarg { s m }
   {
@@ -293,7 +308,7 @@
       }
   }
 \__beerydoc_tmp:Nn \__beerydoc_o_arg:n {#1}
-\__beerydoc_tmp:Nn \__beerydoc_o_arg_meta:n { \__beerydoc_meta:n {#1} }
+\__beerydoc_tmp:Nn \__beerydoc_o_arg_meta:n { \meta {#1} }
 
 \NewDocumentCommand \sarg { }
   {
@@ -316,20 +331,36 @@
               { \exp_not:c { __beerydoc_#1:n } {##1} }
           }
       }
-    \cs_new_protected:cpn { __beerydoc_#1:n } ##1 { #2 { ##1 \@ } }
+    \cs_new_protected:cpn { __beerydoc_#1:n } ##1
+      { \group_begin: #2 ##1 \@ \group_end: }
     \__beerydoc_tmp:nN
   }
 \__beerydoc_tmp:nN
-  {cls}      \textsf
-  {pkg}      \textsf
-  {env}      \texttt
-  {hook}     \texttt
-  {socket}   \texttt
-  {plug}     \texttt
-  {template} \texttt
-  {instance} \texttt
+  {cls}    \sffamily
+  {pkg}    \sffamily
+  {env}    \ttfamily
+  {socket} \ttfamily
+  {plug}   \ttfamily
   { \q_recursion_tail } \scan_stop:
 \q_recursion_stop
+
+\NewDocumentCommand \hook { m }
+  {
+    \mode_if_math:TF
+      { \msg_error:nnn { beerydoc } { math-mode-invalid } { hook } }
+      { \__beerydoc_hook:n {#1} }
+  }
+\cs_new_protected:Npn \__beerydoc_hook:n #1
+  {
+    \group_begin:
+      \tl_set:Nn \l__beerydoc_hook_tl {#1}
+      \tl_replace_all:Nnn \l__beerydoc_hook_tl { / }
+        { \__beerydoc_hook_slash: }
+      \ttfamily
+      \l__beerydoc_hook_tl \@
+    \group_end:
+  }
+\cs_new_protected:Npn \__beerydoc_hook_slash: { / \allowbreak }
 
 \NewDocumentCommand \latin { m }
   {
@@ -337,7 +368,8 @@
       { \msg_error:nnn { beerydoc } { math-mode-invalid } { latin } }
       { \__beerydoc_latin:n {#1} }
   }
-\cs_new_protected:Npn \__beerydoc_latin:n #1 { \textit {#1} }
+\cs_new_protected:Npn \__beerydoc_latin:n #1
+  { \group_begin: \ttfamily #1 \group_end: }
 
 \NewDocumentCommand \honorific { m }
   {
@@ -374,7 +406,7 @@
 
 \RenewDocumentCommand \slash { } { / \allowbreak }
 
-% CUSTOM ENVIRONMENTS
+% Custom environments
 
 \RequirePackage { tcolorbox }
 \NewTColorBox { syntax } { }
@@ -395,30 +427,43 @@
     % \obeyspaces
     \obeylines
   }
+\hook_gput_code:nnn { env/syntax/after } { beerydoc }
+  { \noindent \ignorespaces }
 \NewDocumentEnvironment { function } { m }
   {
-    \par
+    \noindent
     \begin { minipage } [ b ] { \textwidth }
       \setlength \parskip { \medskipamount }
   }
-  {
-    \end { minipage }
-    \par
-  }
+  { \end { minipage } }
 \NewEnvironmentCopy { variable } { function }
+\cs_new_protected:Npn \__beerydoc_function_footnote:n #1
+  {
+    \footnotemark
+    \hook_gput_next_code:nn { env/function/after } { \footnotetext {#1} }
+  }
+\cs_new_protected:Npn \__beerydoc_variable_footnote:n #1
+  {
+    \footnotemark
+    \hook_gput_next_code:nn { env/variable/after } { \footnotetext {#1} }
+  }
+\hook_gput_code:nnn { env/function/begin } { beerydoc }
+  { \cs_set_eq:NN \footnote \__beerydoc_function_footnote:n }
+\hook_gput_code:nnn { env/variable/begin } { beerydoc }
+  { \cs_set_eq:NN \footnote \__beerydoc_variable_footnote:n }
 
-% FLOATS
+% Floats
 
 \renewcommand\bottomfraction{0.5} % default = 0.3
 \setcounter{bottomnumber}{2} % default = 1
 \setcounter{topnumber}{3} % default = 2
 \setcounter{totalnumber}{4} % default = 3
 
-% ENVIRONMENTS
+% Environments
 
 \RequirePackage { multicol }
 
-% PAGE STYLE
+% Page style
 
 % \flushbottom
 \raggedbottom
@@ -451,7 +496,7 @@
 \fancyfoot [ C ]
   { \footnotesize \thepage \c_space_tl of~ \pageref { LastPage } }
 
-% PARAGRAPH STYLE
+% Paragraph style
 
 % \frenchspacing
 \nonfrenchspacing
@@ -461,7 +506,7 @@
 \RequirePackage [ raggedrightboxes ] { ragged2e }
 \setlength \RaggedRightRightskip
   { 0pt plus \dim_use:N \c_beerydoc_alphabet_dim } % default = 0pt plus 2em
-\setlength \JustifyingParindent { 1.5em } % default = \parindent
+\setlength \JustifyingParindent { 2em } % default = \parindent
 \RaggedRight
 % \justifying
 \RequirePackage { microtype }
@@ -475,8 +520,9 @@
 % hyphenation
 \hyphenpenalty = 50 % default = 50
 \exhyphenpenalty = \hyphenpenalty % default = 100
+\finalhyphendemerits = 0 % default = 5000
 
-% HEADINGS, TABLE OF CONTENTS
+% Headings, Table of contents
 
 \RequirePackage { titlesec , titletoc }
 \setcounter { secnumdepth } { 3 }
@@ -526,7 +572,7 @@
   { \thesubsubsection } { 1em }
   { } { }
 
-% LISTS, LIST HEADINGS
+% Lists, List headings
 
 \RequirePackage { enumitem }
 \setlist
@@ -580,17 +626,17 @@
     \vspace { \skip_eval:n { \c_beerydoc_small_skip - \parskip } }
   }
 
-% TABLES
+% Tables
 
 \RequirePackage { tabularray }
 \UseTblrLibrary { booktabs , siunitx }
 
-% VERBATIM
+% Verbatim
 
 \RequirePackage { fancyvrb }
 \hook_gput_code:nnn { begindocument } { beerydoc } { \DefineShortVerb { \| } }
 
-% QUOTES
+% Quotes
 
 \RequirePackage { csquotes }
 \RenewDocumentEnvironment { quote } { }
@@ -604,7 +650,7 @@
   }
   { \endlist }
 
-% FOOTNOTES
+% Footnotes
 
 \RequirePackage [ bottomfloats , ragged ] { footmisc }
 % \setlength { \skip \footins } { \c_beerydoc_big_skip }
@@ -631,7 +677,7 @@
       { \c_zero_dim } { \c_zero_dim }
   }
 
-% REFERENCES
+% References
 
 \hook_gput_code:nnn { shipout / lastpage } { beerydoc } { \label { LastPage } }
 \RequirePackage { xurl }
@@ -653,12 +699,11 @@
     \cs_set_eq:NN \key  \__beerydoc_pdfstring_key_value:n
     \cs_set_eq:NN \cs   \__beerydoc_pdfstring_cs:n
     \cs_set_eq:NN \meta \__beerydoc_pdfstring_meta:n
-    \tl_map_inline:nn
-      { \cls \pkg \env \hook \socket \plug \template \instance }
+    \tl_map_inline:nn { \cls \pkg \env \hook \socket \plug }
       { \cs_set_eq:NN #1 \__beerydoc_pdfstring_tl_to_str:n }
   }
 
-% MESSAGES
+% Messages
 
 \msg_new:nnn { beerydoc } { math-mode-invalid }
   { '\iow_char:N \\ #1'~ invalid~ in~ math~ mode~ \msg_line_context:. }
