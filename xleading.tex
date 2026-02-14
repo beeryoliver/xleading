@@ -10,7 +10,7 @@ Set the leading
 
 Oliver Beery
 
-Version 0.0.0\quad 27 December 2025
+Version 0.0.0\quad 13 February 2026
 
 
 \section{Introduction}
@@ -36,19 +36,18 @@ length.
 
 \section{Command}
 
-The syntax \meta{dim expr} has the same meaning as the argument to
-\cs{dimeval}, which is documented in \pkg{usrguide}.
+The syntax \meta{dimen} has the same meaning as the argument to \cs{dimeval},
+which is documented in \pkg{usrguide}.
 
-\begin{function}{\leading}
+\begin{code}{\leading}
   \begin{syntax}
-    \cs{leading} \marg{dim expr}
+    \cs{leading} \marg{dimen}
   \end{syntax}
   Uses \cs{linespread}\marg{factor}\cs{selectfont} with a value of
-  \meta{factor} set such that the new \cs{baselineskip} equals the result of
-  evaluating the \meta{dim expr}.
+  \meta{factor} set such that the new \cs{baselineskip} equals \meta{dimen}.
   The new \cs{baselineskip} has no stretch and shrink components.
   Cannot be used in math mode.
-\end{function}
+\end{code}
 
 
 \section{Programming}
